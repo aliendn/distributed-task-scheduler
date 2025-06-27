@@ -1,0 +1,40 @@
+version: "3.9"
+
+services:
+  scheduler:
+    build:
+      context: .
+    ports:
+      - "8080:8080"
+    environment:
+      NODE_ID: "scheduler-1"
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: user
+      DB_PASSWORD: pass
+      DB_NAME: scheduler
+    depends_on:
+      - db
+    restart: always
+
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_DB: scheduler
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./configs/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+
+volumes:
+  pgdata:
