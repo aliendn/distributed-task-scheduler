@@ -7,10 +7,17 @@ import (
 	"distributed-task-scheduler/internal/scheduler"
 	"distributed-task-scheduler/pkg/database"
 	"distributed-task-scheduler/pkg/repositories"
+	"github.com/gin-gonic/gin"
 	"log"
 	"time"
 )
 
+// @title Distributed Task Scheduler API
+// @version 1.0
+// @description API for scheduling tasks
+// @host localhost:8080
+// @BasePath /
+// @schemes http
 func main() {
 	metrics.Init()
 
@@ -45,8 +52,9 @@ func main() {
 	heartbeater := cluster.NewHeartbeater(leader.NodeID, 5*time.Second)
 	heartbeater.Start()
 	defer heartbeater.Stop()
+	router := gin.Default()
+	routes.RegisterRoutes(router, taskScheduler)
 
-	router := routes.SetupRouter(taskScheduler)
 	log.Println("🚀 Server running at http://localhost:8080")
 	router.Run(":8080")
 }

@@ -33,7 +33,7 @@ func NewAPIHandler(s *scheduler.TaskScheduler) *APIHandler {
 // @Param task body TaskRequest true "Task to submit"
 // @Success 202 {object} scheduler.Task
 // @Failure 400 {object} map[string]string
-// @Router /tasks [post]
+// @Router /api/v1/tasks [post]
 func (h *APIHandler) SubmitTask(c *gin.Context) {
 	var req TaskRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
