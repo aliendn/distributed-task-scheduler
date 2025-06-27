@@ -1,0 +1,111 @@
+basePath: /
+definitions:
+  api.TaskRequest:
+    properties:
+      payload: {}
+      priority:
+        example: high
+        type: string
+    required:
+    - payload
+    - priority
+    type: object
+  scheduler.Task:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      payload: {}
+      priority:
+        $ref: '#/definitions/scheduler.TaskPriority'
+      status:
+        type: string
+    type: object
+  scheduler.TaskPriority:
+    enum:
+    - 0
+    - 1
+    - 2
+    type: integer
+    x-enum-varnames:
+    - High
+    - Medium
+    - Low
+host: localhost:8080
+info:
+  contact: {}
+  description: API for scheduling tasks
+  title: Distributed Task Scheduler API
+  version: "1.0"
+paths:
+  /api/v1/tasks:
+    get:
+      description: Returns a list of all tasks
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/scheduler.Task'
+            type: array
+      summary: Get all tasks
+      tags:
+      - Tasks
+    post:
+      consumes:
+      - application/json
+      description: Submit a task with priority and JSON payload
+      parameters:
+      - description: Task to submit
+        in: body
+        name: task
+        required: true
+        schema:
+          $ref: '#/definitions/api.TaskRequest'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/scheduler.Task'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Submit a new task
+      tags:
+      - Tasks
+  /tasks/{id}:
+    get:
+      description: Returns task status
+      parameters:
+      - description: Task ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/scheduler.Task'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get task by ID
+      tags:
+      - Tasks
+schemes:
+- http
+swagger: "2.0"

@@ -32,3 +32,10 @@ func (r *TaskRepository) GetUnfinishedTasks() ([]models.Task, error) {
 	err := r.db.Where("status IN ?", []string{"pending", "running"}).Find(&tasks).Error
 	return tasks, err
 }
+
+// GetAll returns all tasks in the database
+func (r *TaskRepository) GetAll() ([]models.Task, error) {
+	var tasks []models.Task
+	err := r.db.Find(&tasks).Error
+	return tasks, err
+}

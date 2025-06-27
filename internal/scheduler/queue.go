@@ -2,7 +2,6 @@ package scheduler
 
 import (
 	"container/heap"
-	"encoding/json"
 	"sync"
 	"time"
 
@@ -34,11 +33,11 @@ func (p TaskPriority) String() string {
 
 // Task represents a unit of work
 type Task struct {
-	ID        string          `json:"id"`
-	Priority  TaskPriority    `json:"priority"`
-	Payload   json.RawMessage `json:"payload"`
-	CreatedAt time.Time       `json:"created_at"`
-	Status    string          `json:"status"`
+	ID        string       `json:"id"`
+	Priority  TaskPriority `json:"priority"`
+	Payload   interface{}  `json:"payload"`
+	CreatedAt time.Time    `json:"created_at"`
+	Status    string       `json:"status"`
 }
 
 // TaskQueueItem wraps a Task for use in a heap
@@ -127,7 +126,7 @@ func (pq *PriorityQueue) Pop() interface{} {
 	return item
 }
 
-func NewTask(priority TaskPriority, payload json.RawMessage) *Task {
+func NewTask(priority TaskPriority, payload interface{}) *Task {
 	return &Task{
 		ID:        uuid.New().String(),
 		Priority:  priority,

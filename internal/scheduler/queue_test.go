@@ -1,16 +1,15 @@
 package scheduler
 
 import (
-	"encoding/json"
 	"testing"
 )
 
 func TestPriorityQueueOrdering(t *testing.T) {
 	q := NewPriorityQueue()
 
-	task1 := NewTask(Low, json.RawMessage(`{"data":1}`))
-	task2 := NewTask(High, json.RawMessage(`{"data":2}`))
-	task3 := NewTask(Medium, json.RawMessage(`{"data":3}`))
+	task1 := NewTask(Low, interface{}(`{"data":1}`))
+	task2 := NewTask(High, interface{}(`{"data":2}`))
+	task3 := NewTask(Medium, interface{}(`{"data":3}`))
 
 	q.PushTask(task1)
 	q.PushTask(task2)

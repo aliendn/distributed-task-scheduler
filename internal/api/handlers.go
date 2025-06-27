@@ -1,7 +1,6 @@
 package api
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"distributed-task-scheduler/internal/scheduler"
@@ -10,8 +9,8 @@ import (
 
 // TaskRequest represents the request payload for a new task
 type TaskRequest struct {
-	Priority string          `json:"priority" binding:"required" example:"high"`
-	Payload  json.RawMessage `json:"payload" binding:"required" example:"{\"action\":\"send_email\"}"`
+	Priority string      `json:"priority" binding:"required" example:"high"`
+	Payload  interface{} `json:"payload" binding:"required"`
 }
 
 // APIHandler wraps dependencies like the scheduler
@@ -75,4 +74,16 @@ func (h *APIHandler) GetTask(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, task)
+}
+
+// GetAllTasks godoc
+// @Summary Get all tasks
+// @Description Returns a list of all tasks
+// @Tags Tasks
+// @Produce json
+// @Success 200 {array} scheduler.Task
+// @Router /api/v1/tasks [get]
+func (h *APIHandler) GetAllTasks(c *gin.Context) {
+	tasks := h.Scheduler.GetAllTasks()
+	c.JSON(http.StatusOK, tasks)
 }

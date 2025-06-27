@@ -1,7 +1,6 @@
 package scheduler
 
 import (
-	"encoding/json"
 	"log"
 	"sync"
 	"time"
@@ -31,7 +30,7 @@ func NewTaskScheduler(queue *PriorityQueue, repo *repositories.TaskRepository) *
 }
 
 // SubmitTask persists + enqueues
-func (ts *TaskScheduler) SubmitTask(priority TaskPriority, payload json.RawMessage) *Task {
+func (ts *TaskScheduler) SubmitTask(priority TaskPriority, payload interface{}) *Task {
 	// Create Task
 	task := &Task{
 		ID:        uuid.New().String(),
@@ -122,4 +121,42 @@ func (ts *TaskScheduler) RecoverUnfinishedTasks() {
 	}
 
 	log.Printf("[Scheduler] Recovered %d unfinished tasks", len(tasks))
+}
+
+// GetAllTasks returns all tasks from cache and DB fallback.
+func (ts *TaskScheduler) GetAllTasks() []*Task {
+	// 1️⃣ First, get all from cache
+	ts.cacheMutex.RLock()
+	cacheTasks := make(map[string]*Task, len(ts.cache))
+	for id, t := range ts.cache {
+		cacheTasks[id] = t
+	}
+	ts.cacheMutex.RUnlock()
+
+	// 2️⃣ Next, get all tasks from DB
+	dbTasks, err := ts.repo.GetAll()
+	if err != nil {
+		log.Printf("[Scheduler] Failed to get tasks from DB: %v", err)
+	}
+
+	// 3️⃣ Combine: avoid duplicates by checking IDs
+	allTasks := make([]*Task, 0, len(cacheTasks)+len(dbTasks))
+	for _, t := range cacheTasks {
+		allTasks = append(allTasks, t)
+	}
+
+	for _, dbTask := range dbTasks {
+		if _, exists := cacheTasks[dbTask.ID]; !exists {
+			t := &Task{
+				ID:        dbTask.ID,
+				Priority:  TaskPriority(dbTask.Priority),
+				Payload:   dbTask.Payload,
+				CreatedAt: dbTask.CreatedAt,
+				Status:    dbTask.Status,
+			}
+			allTasks = append(allTasks, t)
+		}
+	}
+
+	return allTasks
 }
