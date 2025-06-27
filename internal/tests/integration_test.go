@@ -2,6 +2,8 @@ package tests
 
 import (
 	"bytes"
+	"distributed-task-scheduler/pkg/database"
+	"distributed-task-scheduler/pkg/repositories"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -15,20 +17,24 @@ import (
 
 func TestSubmitAndQueryTask(t *testing.T) {
 	gin.SetMode(gin.TestMode)
+	db := database.DB
+
+	taskRepo := repositories.NewTaskRepository(db)
 
 	queue := scheduler.NewPriorityQueue()
-	s := scheduler.NewTaskScheduler(queue)
+	s := scheduler.NewTaskScheduler(queue, taskRepo)
 
-	router := routes.SetupRouter(s)
+	router := gin.New()
+	routes.RegisterRoutes(router, s)
 
-	// Submit a task
+	// Submit a task - note the full API prefix /api/v1/tasks
 	taskBody := map[string]interface{}{
 		"priority": "high",
 		"payload":  map[string]string{"action": "send_email", "to": "user@example.com"},
 	}
 	jsonData, _ := json.Marshal(taskBody)
 
-	req := httptest.NewRequest("POST", "/tasks", bytes.NewBuffer(jsonData))
+	req := httptest.NewRequest("POST", "/api/v1/tasks", bytes.NewBuffer(jsonData))
 	req.Header.Set("Content-Type", "application/json")
 	resp := httptest.NewRecorder()
 
@@ -43,13 +49,16 @@ func TestSubmitAndQueryTask(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to parse response: %v", err)
 	}
-	id := created["id"].(string)
+	id, ok := created["id"].(string)
+	if !ok {
+		t.Fatalf("Response missing task ID")
+	}
 
-	// Give worker a moment to process it
+	// Give worker a moment to process it (if needed)
 	time.Sleep(1 * time.Second)
 
-	// Query task
-	req2 := httptest.NewRequest("GET", "/tasks/"+id, nil)
+	// Query task - use correct path with /api/v1/tasks/{id}
+	req2 := httptest.NewRequest("GET", "/api/v1/tasks/"+id, nil)
 	resp2 := httptest.NewRecorder()
 
 	router.ServeHTTP(resp2, req2)
@@ -59,7 +68,10 @@ func TestSubmitAndQueryTask(t *testing.T) {
 	}
 
 	var fetched map[string]interface{}
-	_ = json.Unmarshal(resp2.Body.Bytes(), &fetched)
+	err = json.Unmarshal(resp2.Body.Bytes(), &fetched)
+	if err != nil {
+		t.Fatalf("Failed to parse fetched task: %v", err)
+	}
 	if fetched["id"] != id {
 		t.Fatalf("Expected task ID %s, got %v", id, fetched["id"])
 	}

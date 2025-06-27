@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// Heartbeater sends periodic liveness signals.
+// Heartbeater Heartbeat sends periodic liveness signals.
 type Heartbeater struct {
 	interval time.Duration
 	stopChan chan struct{}

@@ -32,7 +32,7 @@ func main() {
 	queue := scheduler.NewPriorityQueue()
 	taskScheduler := scheduler.NewTaskScheduler(queue, taskRepo)
 
-	// Init worker pool with repo too ✅
+	// Init worker pool with repo too
 	workerPool := scheduler.NewWorkerPool(queue, taskRepo, 4)
 
 	// Recover tasks from DB
@@ -49,9 +49,9 @@ func main() {
 	leader.Start()
 	defer leader.Stop()
 
-	heartbeater := cluster.NewHeartbeater(leader.NodeID, 5*time.Second)
-	heartbeater.Start()
-	defer heartbeater.Stop()
+	heartBeater := cluster.NewHeartbeater(leader.NodeID, 5*time.Second)
+	heartBeater.Start()
+	defer heartBeater.Stop()
 	router := gin.Default()
 	routes.RegisterRoutes(router, taskScheduler)
 

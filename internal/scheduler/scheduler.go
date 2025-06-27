@@ -125,7 +125,7 @@ func (ts *TaskScheduler) RecoverUnfinishedTasks() {
 
 // GetAllTasks returns all tasks from cache and DB fallback.
 func (ts *TaskScheduler) GetAllTasks() []*Task {
-	// 1️⃣ First, get all from cache
+	// get all from cache
 	ts.cacheMutex.RLock()
 	cacheTasks := make(map[string]*Task, len(ts.cache))
 	for id, t := range ts.cache {
@@ -133,13 +133,13 @@ func (ts *TaskScheduler) GetAllTasks() []*Task {
 	}
 	ts.cacheMutex.RUnlock()
 
-	// 2️⃣ Next, get all tasks from DB
+	// get all tasks from DB
 	dbTasks, err := ts.repo.GetAll()
 	if err != nil {
 		log.Printf("[Scheduler] Failed to get tasks from DB: %v", err)
 	}
 
-	// 3️⃣ Combine: avoid duplicates by checking IDs
+	// Combine: avoid duplicates by checking IDs
 	allTasks := make([]*Task, 0, len(cacheTasks)+len(dbTasks))
 	for _, t := range cacheTasks {
 		allTasks = append(allTasks, t)
