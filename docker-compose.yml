@@ -4,6 +4,7 @@ services:
   scheduler:
     build:
       context: .
+    container_name: scheduler
     ports:
       - "8080:8080"
     environment:
@@ -19,6 +20,7 @@ services:
 
   db:
     image: postgres:15
+    container_name: postgres_db
     restart: always
     environment:
       POSTGRES_DB: scheduler
@@ -31,6 +33,7 @@ services:
 
   prometheus:
     image: prom/prometheus
+    container_name: prometheus
     volumes:
       - ./configs/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:

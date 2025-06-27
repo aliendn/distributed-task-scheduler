@@ -3,9 +3,11 @@ package scheduler
 import (
 	"container/heap"
 	"encoding/json"
-	"github.com/google/uuid"
 	"sync"
 	"time"
+
+	"distributed-task-scheduler/internal/metrics"
+	"github.com/google/uuid"
 )
 
 // TaskPriority defines task priority levels
@@ -20,26 +22,26 @@ const (
 func (p TaskPriority) String() string {
 	switch p {
 	case High:
-		return "High"
+		return "high"
 	case Medium:
-		return "Medium"
+		return "medium"
 	case Low:
-		return "Low"
+		return "low"
 	default:
-		return "Unknown"
+		return "unknown"
 	}
 }
 
-// Task represents a unit of work in the scheduler
+// Task represents a unit of work
 type Task struct {
 	ID        string          `json:"id"`
 	Priority  TaskPriority    `json:"priority"`
 	Payload   json.RawMessage `json:"payload"`
 	CreatedAt time.Time       `json:"created_at"`
-	Status    string          `json:"status"` // pending, running, completed, failed
+	Status    string          `json:"status"`
 }
 
-// TaskQueueItem wraps a task for heap priority comparison
+// TaskQueueItem wraps a Task for use in a heap
 type TaskQueueItem struct {
 	Task     *Task
 	index    int
@@ -47,7 +49,7 @@ type TaskQueueItem struct {
 	created  time.Time
 }
 
-// PriorityQueue implements a thread-safe heap
+// PriorityQueue is a threadsafe min-heap by priority
 type PriorityQueue struct {
 	items []*TaskQueueItem
 	lock  sync.Mutex
@@ -79,6 +81,7 @@ func (pq *PriorityQueue) PushTask(task *Task) {
 		created:  task.CreatedAt,
 	}
 	heap.Push(pq, item)
+	metrics.TasksInQueue.Inc()
 	pq.cond.Signal()
 }
 
@@ -91,15 +94,11 @@ func (pq *PriorityQueue) PopTask() *Task {
 	}
 
 	item := heap.Pop(pq).(*TaskQueueItem)
+	metrics.TasksInQueue.Dec()
 	return item.Task
 }
 
-//
-// Heap interface implementation
-//
-
 func (pq PriorityQueue) Less(i, j int) bool {
-	// Higher priority first; older first when priority is equal
 	if pq.items[i].priority == pq.items[j].priority {
 		return pq.items[i].created.Before(pq.items[j].created)
 	}
@@ -111,8 +110,6 @@ func (pq PriorityQueue) Swap(i, j int) {
 	pq.items[i].index = i
 	pq.items[j].index = j
 }
-
-func (pq *PriorityQueue) Len_() int { return len(pq.items) }
 
 func (pq *PriorityQueue) Push(x interface{}) {
 	item := x.(*TaskQueueItem)
@@ -126,7 +123,7 @@ func (pq *PriorityQueue) Pop() interface{} {
 	item := old[n-1]
 	old[n-1] = nil
 	item.index = -1
-	pq.items = old[0 : n-1]
+	pq.items = old[:n-1]
 	return item
 }
 

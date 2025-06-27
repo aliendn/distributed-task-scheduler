@@ -2,17 +2,19 @@ package cluster
 
 import (
 	"log"
+	"sync"
 	"time"
 )
 
-// Heartbeater sends periodic signals to simulate node health
+// Heartbeater sends periodic liveness signals.
 type Heartbeater struct {
 	interval time.Duration
 	stopChan chan struct{}
 	NodeID   string
+	once     sync.Once
 }
 
-// NewHeartbeater creates a heartbeat sender
+// NewHeartbeater creates a heartbeat sender.
 func NewHeartbeater(nodeID string, interval time.Duration) *Heartbeater {
 	return &Heartbeater{
 		interval: interval,
@@ -21,6 +23,7 @@ func NewHeartbeater(nodeID string, interval time.Duration) *Heartbeater {
 	}
 }
 
+// Start begins sending heartbeats.
 func (hb *Heartbeater) Start() {
 	ticker := time.NewTicker(hb.interval)
 	go func() {
@@ -37,11 +40,9 @@ func (hb *Heartbeater) Start() {
 	}()
 }
 
+// Stop signals the heartbeat loop to exit.
 func (hb *Heartbeater) Stop() {
-	select {
-	case <-hb.stopChan:
-		// already closed
-	default:
+	hb.once.Do(func() {
 		close(hb.stopChan)
-	}
+	})
 }

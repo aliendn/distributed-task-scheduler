@@ -24,20 +24,21 @@ var (
 	TasksInQueue = prometheus.NewGauge(
 		prometheus.GaugeOpts{
 			Name: "task_queue_length",
-			Help: "Number of tasks in the queue",
+			Help: "Number of tasks currently in the queue",
 		},
 	)
 
 	TaskDuration = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Name:    "task_processing_seconds",
-			Help:    "Task processing durations",
+			Help:    "Duration in seconds of task processing",
 			Buckets: prometheus.DefBuckets,
 		},
 		[]string{"priority"},
 	)
 )
 
+// Init registers all custom metrics
 func Init() {
 	prometheus.MustRegister(
 		TasksSubmitted,

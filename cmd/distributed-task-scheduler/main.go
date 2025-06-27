@@ -21,12 +21,17 @@ func main() {
 	// Init repository
 	taskRepo := repositories.NewTaskRepository(db)
 
-	// Init scheduler components
+	// Init scheduler
 	queue := scheduler.NewPriorityQueue()
 	taskScheduler := scheduler.NewTaskScheduler(queue, taskRepo)
 
+	// Init worker pool with repo too ✅
+	workerPool := scheduler.NewWorkerPool(queue, taskRepo, 4)
+
+	// Recover tasks from DB
 	taskScheduler.RecoverUnfinishedTasks()
-	workerPool := scheduler.NewWorkerPool(queue, 4)
+
+	// Start workers
 	workerPool.Start()
 	defer workerPool.Stop()
 
@@ -41,7 +46,6 @@ func main() {
 	heartbeater.Start()
 	defer heartbeater.Stop()
 
-	// Start API
 	router := routes.SetupRouter(taskScheduler)
 	log.Println("🚀 Server running at http://localhost:8080")
 	router.Run(":8080")

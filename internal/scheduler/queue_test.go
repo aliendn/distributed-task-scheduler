@@ -1,31 +1,37 @@
 package scheduler
 
 import (
+	"encoding/json"
 	"testing"
-	"time"
 )
 
-func TestPriorityOrder(t *testing.T) {
+func TestPriorityQueueOrdering(t *testing.T) {
 	q := NewPriorityQueue()
 
-	t1 := &Task{ID: "low", Priority: Low, CreatedAt: time.Now()}
-	t2 := &Task{ID: "high", Priority: High, CreatedAt: time.Now().Add(-1 * time.Minute)}
-	t3 := &Task{ID: "medium", Priority: Medium, CreatedAt: time.Now()}
+	task1 := NewTask(Low, json.RawMessage(`{"data":1}`))
+	task2 := NewTask(High, json.RawMessage(`{"data":2}`))
+	task3 := NewTask(Medium, json.RawMessage(`{"data":3}`))
 
-	q.PushTask(t1)
-	q.PushTask(t2)
-	q.PushTask(t3)
+	q.PushTask(task1)
+	q.PushTask(task2)
+	q.PushTask(task3)
 
-	first := q.PopTask()
-	if first.ID != "high" {
-		t.Fatalf("expected high priority task, got %s", first.ID)
+	if q.Len() != 3 {
+		t.Fatalf("Expected 3 tasks, got %d", q.Len())
 	}
-	second := q.PopTask()
-	if second.ID != "medium" {
-		t.Fatalf("expected medium priority task, got %s", second.ID)
+
+	t1 := q.PopTask()
+	if t1.Priority != High {
+		t.Fatalf("Expected high priority first, got %s", t1.Priority.String())
 	}
-	third := q.PopTask()
-	if third.ID != "low" {
-		t.Fatalf("expected low priority task, got %s", third.ID)
+
+	t2 := q.PopTask()
+	if t2.Priority != Medium {
+		t.Fatalf("Expected medium priority second, got %s", t2.Priority.String())
+	}
+
+	t3 := q.PopTask()
+	if t3.Priority != Low {
+		t.Fatalf("Expected low priority third, got %s", t3.Priority.String())
 	}
 }
