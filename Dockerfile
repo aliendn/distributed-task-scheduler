@@ -24,3 +24,4 @@ COPY --from=builder /app/distributed-task-scheduler .
 EXPOSE 8080
 
 ENTRYPOINT ["./distributed-task-scheduler"]
+

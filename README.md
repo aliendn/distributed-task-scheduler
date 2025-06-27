@@ -50,3 +50,4 @@ rate(task_processing_seconds_sum[1m])
 ```bash
 docker-compose up --build
 ```
+

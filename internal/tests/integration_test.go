@@ -72,6 +72,7 @@ func TestSubmitAndQueryTask(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to parse fetched task: %v", err)
 	}
+
 	if fetched["id"] != id {
 		t.Fatalf("Expected task ID %s, got %v", id, fetched["id"])
 	}
