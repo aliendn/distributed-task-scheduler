@@ -20,7 +20,7 @@ func RegisterRoutes(router *gin.Engine, s *scheduler.TaskScheduler) {
 	{
 		v1.POST("/tasks", h.SubmitTask)
 		v1.GET("/tasks/:id", h.GetTask)
-		v1.GET("/tasks", h.GetAllTasks) // ✅ new GET /tasks
+		v1.GET("/tasks", h.GetAllTasks)
 	}
 
 	router.GET("/metrics", gin.WrapH(promhttp.Handler()))
